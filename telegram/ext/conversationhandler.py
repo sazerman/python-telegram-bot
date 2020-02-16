@@ -188,7 +188,7 @@ class ConversationHandler(Handler):
         """:obj:`telegram.ext.BasePersistance`: The persistence used to store conversations.
         Set by dispatcher"""
         self.map_to_parent = map_to_parent
-        self.roles = None
+        self.roles = roles
 
         self.timeout_jobs = dict()
         self._timeout_jobs_lock = Lock()

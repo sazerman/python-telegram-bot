@@ -81,7 +81,10 @@ class Handler(object):
 
         def check_update_with_filters(update):
             if instance.roles:
-                return instance.roles(update)
+                if instance.roles(update):
+                    return check_update(update)
+                else:
+                    return False
             return check_update(update)
 
         instance.check_update = check_update_with_filters
