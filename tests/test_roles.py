@@ -225,13 +225,13 @@ class TestRole(object):
 class TestRoles(object):
     def test_creation(self, bot):
         roles = Roles(bot)
+        assert isinstance(roles, dict)
         assert isinstance(roles.ADMINS, Role)
         assert isinstance(roles.CHAT_ADMINS, Role)
         assert isinstance(roles.CHAT_ADMINS._bot, Bot)
         assert isinstance(roles.CHAT_CREATOR, Role)
         assert isinstance(roles.CHAT_CREATOR._bot, Bot)
         assert isinstance(roles._bot, Bot)
-        assert isinstance(roles._roles, dict)
 
     def test_add_kick_admin(self, roles):
         assert roles.ADMINS.user_ids == set()
@@ -247,12 +247,20 @@ class TestRoles(object):
     def test_raise_errors(self, roles):
         with pytest.raises(NotImplementedError, match='remove_role'):
             del roles['test']
-        with pytest.raises(NotImplementedError, match='remove_role'):
-            roles.pop('test')
-        with pytest.raises(NotImplementedError, match='remove_role'):
-            roles.clear()
         with pytest.raises(ValueError, match='immutable'):
             roles['test'] = True
+        with pytest.raises(ValueError, match='immutable'):
+            roles.setdefault('test', None)
+        with pytest.raises(ValueError, match='immutable'):
+            roles.update({'test': None})
+        with pytest.raises(NotImplementedError, match='remove_role'):
+            roles.pop('test', None)
+        with pytest.raises(NotImplementedError, match='remove_role'):
+            roles.popitem('test')
+        with pytest.raises(NotImplementedError, match='remove_role'):
+            roles.clear()
+        with pytest.raises(NotImplementedError):
+            roles.copy()
 
     def test_dict_functionality(self, roles):
         roles.add_role('role0', 0)
