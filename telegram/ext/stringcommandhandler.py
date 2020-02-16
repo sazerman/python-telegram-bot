@@ -33,8 +33,6 @@ class StringCommandHandler(Handler):
     Attributes:
         command (:obj:`str`): The command this handler should listen for.
         callback (:obj:`callable`): The callback function for this handler.
-        roles (:obj:`telegram.ext.Role`): Optional. A user role used to restrict access to the
-            handler.
         pass_args (:obj:`bool`): Determines whether the handler should be passed
             ``args``.
         pass_update_queue (:obj:`bool`): Determines whether ``update_queue`` will be
@@ -51,9 +49,6 @@ class StringCommandHandler(Handler):
 
             The return value of the callback is usually ignored except for the special case of
             :class:`telegram.ext.ConversationHandler`.
-        roles (:obj:`telegram.ext.Role`, optional): A user role used to restrict access to the
-            handler. Roles can be combined using bitwise operators (& for and, | for or, ~ for
-            not).
         pass_args (:obj:`bool`, optional): Determines whether the handler should be passed the
             arguments passed to the command as a keyword argument called ``args``. It will contain
             a list of strings, which is the text following the command split on single or
@@ -77,13 +72,11 @@ class StringCommandHandler(Handler):
                  callback,
                  pass_args=False,
                  pass_update_queue=False,
-                 pass_job_queue=False,
-                 roles=None):
+                 pass_job_queue=False):
         super(StringCommandHandler, self).__init__(
             callback,
             pass_update_queue=pass_update_queue,
-            pass_job_queue=pass_job_queue,
-            roles=roles)
+            pass_job_queue=pass_job_queue)
         self.command = command
         self.pass_args = pass_args
 
