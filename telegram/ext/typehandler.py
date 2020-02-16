@@ -27,8 +27,6 @@ class TypeHandler(Handler):
     Attributes:
         type (:obj:`type`): The ``type`` of updates this handler should process.
         callback (:obj:`callable`): The callback function for this handler.
-        roles (:obj:`telegram.ext.Role`): Optional. A user role used to restrict access to the
-            handler.
         strict (:obj:`bool`): Use ``type`` instead of ``isinstance``. Default is ``False``.
         pass_update_queue (:obj:`bool`): Determines whether ``update_queue`` will be
             passed to the callback function.
@@ -46,9 +44,6 @@ class TypeHandler(Handler):
 
             The return value of the callback is usually ignored except for the special case of
             :class:`telegram.ext.ConversationHandler`.
-        roles (:obj:`telegram.ext.Role`, optional): A user role used to restrict access to the
-            handler. Roles can be combined using bitwise operators (& for and, | for or, ~ for
-            not).
         strict (:obj:`bool`, optional): Use ``type`` instead of ``isinstance``.
             Default is ``False``
         pass_update_queue (:obj:`bool`, optional): If set to ``True``, a keyword argument called
@@ -69,13 +64,11 @@ class TypeHandler(Handler):
                  callback,
                  strict=False,
                  pass_update_queue=False,
-                 pass_job_queue=False,
-                 roles=None):
+                 pass_job_queue=False):
         super(TypeHandler, self).__init__(
             callback,
             pass_update_queue=pass_update_queue,
-            pass_job_queue=pass_job_queue,
-            roles=roles)
+            pass_job_queue=pass_job_queue)
         self.type = type
         self.strict = strict
 
