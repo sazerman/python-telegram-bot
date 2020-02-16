@@ -32,7 +32,8 @@ class MessageHandler(Handler):
 
     Attributes:
         filters (:obj:`Filter`): Only allow updates with these Filters. See
-            :mod:`telegram.ext.filters` for a full list of all available filters.
+            :mod:`telegram.ext.filters` for a full list of all available filters. May also contain
+            :class:`telegram.ext.Role` s.
         callback (:obj:`callable`): The callback function for this handler.
         pass_update_queue (:obj:`bool`): Determines whether ``update_queue`` will be
             passed to the callback function.
@@ -67,6 +68,8 @@ class MessageHandler(Handler):
             being: ``message``, ``edited_message``, ``channel_post`` and ``edited_channel_post``.
             If you don't want or need any of those pass ``~Filters.update.*`` in the filter
             argument.
+            Note, that also :class:`telegram.ext.Role` instances may be used here since they
+            inherit from :class:`telegram.ext.filters.BaseFilter`.
         callback (:obj:`callable`): The callback function for this handler. Will be called when
             :attr:`check_update` has determined that an update should be processed by this handler.
             Callback signature for context based API:
