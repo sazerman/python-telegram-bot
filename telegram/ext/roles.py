@@ -194,7 +194,7 @@ class _chat_creator(Role):
                 return False
 
 
-class Roles(object):
+class Roles(dict):
     """This class represents a collection of :class:`telegram.ext.Role` s that can be used to
     manage access control to functionality of a bot. Each role can be accessed by its name, e.g.::
 
@@ -202,11 +202,10 @@ class Roles(object):
             role = roles['my_role']
 
     Note:
-        In fact, :class:`telegram.ext.Roles` implements the following methods of :obj:`dict`:
-        ``get``, ``items``, ``keys``, ``values``, ``__getitem__``, ``__iter__`` and ``__next__``.
-        Those should cover the mest common use cases.
-        However, it does *not* support ``del roles[key]``, ``roles[key] = role``,
-        ``roles.pop(key)`` and ``roles.clear()``.
+        In fact, :class:`telegram.ext.Roles` inherits from :obj:`dict` and thus provides most
+        methods needed for the common use cases. Methods that are *not* supported are:
+        ``__delitem``, ``__setitem__``, ``setdefault``, ``update``, ``pop``, ``popitem``, ``clear``
+        and ``copy``.
         Please use :attr:`add_role` and :attr:`remove_role` instead.
 
     Attributes:
@@ -216,48 +215,61 @@ class Roles(object):
         parent_roles (set(:class:`telegram.ext.Role`)): Parent roles of this role. All the parent
             roles can do anything, this role can do. May be empty.
         name (:obj:`str`): A string representation of this role.
+        ADMINS (:class:`telegram.ext.Role`): A role reserved for administrators of the bot. All
+            roles added to this instance will be child roles of :attr:`ADMINS`.
+        CHAT_ADMINS (:class:`telegram.ext.Role`): Use this role to restrict access to admins of a
+            chat. Handlers with this role wont handle updates that don't have an
+            ``effective_chat``.
+        CHAT_CREATOR (:class:`telegram.ext.Role`): Use this role to restrict access to the creator
+            of a chat. Handlers with this role wont handle updates that don't have an
+            ``effective_chat``.
 
     """
 
     def __init__(self, bot):
-        self._roles = {}
+        super(Roles, self).__init__()
         self._bot = bot
         self.ADMINS = Role(name='admins')
         self.CHAT_ADMINS = _chat_admins(bot=self._bot)
         self.CHAT_CREATOR = _chat_creator(bot=self._bot)
 
     def __delitem__(self, key):
+        """"""  # Remove method from docs
         raise NotImplementedError('Please use remove_role.')
 
     def __setitem__(self, key, value):
+        """"""  # Remove method from docs
         raise ValueError('Roles are immutable!')
 
-    def __getitem__(self, key):
-        return self._roles[key]
+    def _setitem(self, key, value):
+        super(Roles, self).__setitem__(key, value)
 
-    def get(self, key, default=None):
-        return self._roles.get(key, default)
+    def setdefault(self, key, value=None):
+        """"""  # Remove method from docs
+        raise ValueError('Roles are immutable!')
 
-    def __iter__(self):
-        return iter(self._roles)
+    def update(self, other):
+        """"""  # Remove method from docs
+        raise ValueError('Roles are immutable!')
 
-    def __next__(self):
-        return next(self._roles)
+    def pop(self, key, default=None):
+        """"""  # Remove method from docs
+        raise NotImplementedError('Please use remove_role.')
 
-    def items(self):
-        return self._roles.items()
+    def _pop(self, key, default=None):
+        return super(Roles, self).pop(key, default)
 
-    def keys(self):
-        return self._roles.keys()
-
-    def values(self):
-        return self._roles.values()
-
-    def pop(self, key):
+    def popitem(self, key):
+        """"""  # Remove method from docs
         raise NotImplementedError('Please use remove_role.')
 
     def clear(self):
+        """"""  # Remove method from docs
         raise NotImplementedError('Please use remove_role.')
+
+    def copy(self):
+        """"""  # Remove method from docs
+        raise NotImplementedError
 
     def add_admin(self, user_id):
         """Adds a user to the :attr:`ADMINS` role. Will do nothing if user is already present.
@@ -288,10 +300,10 @@ class Roles(object):
         Raises:
             ValueError
         """
-        if name in self._roles:
+        if name in self:
             raise ValueError('Role name is already taken.')
         role = Role(user_ids=user_ids, parent_role=parent_role, name=name)
-        self._roles[name] = role
+        self._setitem(name, role)
         self.ADMINS.add_child_role(role)
 
     def remove_role(self, name):
@@ -300,6 +312,6 @@ class Roles(object):
         Args:
             name (:obj:`str`): The name of the role to be removed
         """
-        role = self._roles.pop(name, None)
+        role = self._pop(name, None)
         if role:
             self.ADMINS.remove_child_role(role)
