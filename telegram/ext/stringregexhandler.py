@@ -38,6 +38,8 @@ class StringRegexHandler(Handler):
     Attributes:
         pattern (:obj:`str` | :obj:`Pattern`): The regex pattern.
         callback (:obj:`callable`): The callback function for this handler.
+        roles (:obj:`telegram.ext.Role`): Optional. A user role used to restrict access to the
+            handler.
         pass_groups (:obj:`bool`): Determines whether ``groups`` will be passed to the
             callback function.
         pass_groupdict (:obj:`bool`): Determines whether ``groupdict``. will be passed to
@@ -57,6 +59,9 @@ class StringRegexHandler(Handler):
 
             The return value of the callback is usually ignored except for the special case of
             :class:`telegram.ext.ConversationHandler`.
+        roles (:obj:`telegram.ext.Role`, optional): A user role used to restrict access to the
+            handler. Roles can be combined using bitwise operators (& for and, | for or, ~ for
+            not).
         pass_groups (:obj:`bool`, optional): If the callback should be passed the result of
             ``re.match(pattern, data).groups()`` as a keyword argument called ``groups``.
             Default is ``False``
@@ -84,11 +89,13 @@ class StringRegexHandler(Handler):
                  pass_groups=False,
                  pass_groupdict=False,
                  pass_update_queue=False,
-                 pass_job_queue=False):
+                 pass_job_queue=False,
+                 roles=None):
         super(StringRegexHandler, self).__init__(
             callback,
             pass_update_queue=pass_update_queue,
-            pass_job_queue=pass_job_queue)
+            pass_job_queue=pass_job_queue,
+            roles=roles)
 
         if isinstance(pattern, string_types):
             pattern = re.compile(pattern)

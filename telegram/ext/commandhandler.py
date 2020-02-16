@@ -47,6 +47,8 @@ class CommandHandler(Handler):
         callback (:obj:`callable`): The callback function for this handler.
         filters (:class:`telegram.ext.BaseFilter`): Optional. Only allow updates with these
             Filters.
+        roles (:obj:`telegram.ext.Role`): Optional. A user role used to restrict access to the
+            handler.
         allow_edited (:obj:`bool`): Determines Whether the handler should also accept
             edited messages.
         pass_args (:obj:`bool`): Determines whether the handler should be passed
@@ -85,6 +87,9 @@ class CommandHandler(Handler):
             :class:`telegram.ext.filters.BaseFilter`. Standard filters can be found in
             :class:`telegram.ext.filters.Filters`. Filters can be combined using bitwise
             operators (& for and, | for or, ~ for not).
+        roles (:obj:`telegram.ext.Role`, optional): A user role used to restrict access to the
+            handler. Roles can be combined using bitwise operators (& for and, | for or, ~ for
+            not).
         allow_edited (:obj:`bool`, optional): Determines whether the handler should also accept
             edited messages. Default is ``False``.
             DEPRECATED: Edited is allowed by default. To change this behavior use
@@ -124,13 +129,15 @@ class CommandHandler(Handler):
                  pass_update_queue=False,
                  pass_job_queue=False,
                  pass_user_data=False,
-                 pass_chat_data=False):
+                 pass_chat_data=False,
+                 roles=None):
         super(CommandHandler, self).__init__(
             callback,
             pass_update_queue=pass_update_queue,
             pass_job_queue=pass_job_queue,
             pass_user_data=pass_user_data,
-            pass_chat_data=pass_chat_data)
+            pass_chat_data=pass_chat_data,
+            roles=roles)
 
         if isinstance(command, string_types):
             self.command = [command.lower()]
