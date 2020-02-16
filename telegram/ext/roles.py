@@ -55,16 +55,20 @@ class Role(Filters.user):
         if user_ids is None:
             user_ids = set()
         super(Role, self).__init__(user_ids)
-        if name:
-            self.name = 'Role({})'.format(name)
-        elif self.user_ids or self.usernames:
-            self.name = 'Role({})'.format(self.user_ids or self.usernames)
-        else:
-            self.name = 'Role({})'
         self.child_roles = set()
         self.parent_roles = set()
+        self._name = name
         if parent_role:
             self.add_parent_role(parent_role)
+
+    @property
+    def name(self):
+        if self._name:
+            return 'Role({})'.format(self._name)
+        elif self.user_ids or self.usernames:
+            return 'Role({})'.format(self.user_ids or self.usernames)
+        else:
+            return 'Role({})'
 
     def filter(self, update):
         user = update.effective_user
