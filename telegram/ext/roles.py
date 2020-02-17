@@ -18,8 +18,10 @@
 # along with this program.  If not, see [http://www.gnu.org/licenses/].
 """This module contains the class Role, which allows to restrict access to handlers."""
 
+from copy import deepcopy
+
 from telegram import ChatMember, TelegramError
-from . import Filters
+from .filters import Filters
 
 
 class Role(Filters.user):
@@ -32,8 +34,8 @@ class Role(Filters.user):
 
     Note:
         ``role_1 == role_2`` does not test for the hierarchical order of the roles, but in fact for
-        equality. Two roles are considerd equal, if their :attr:`user_ids`, :attr:`child_roles`
-        and :attr:`parent_roles` coincide.
+        equality. Two roles are considerd equal, if their :attr:`user_ids` and :attr:`child_roles`
+        coincide.
 
     Attributes:
         user_ids (set(:obj:`int`)): The ids of the users of this role. May be empty.
@@ -153,7 +155,6 @@ class Role(Filters.user):
         # Acutally tests for equality in terms of child/parent roles and user_ids
         if isinstance(other, Role):
             return (self.child_roles == other.child_roles
-                    and self.parent_roles == other.parent_roles
                     and self.user_ids == other.user_ids)
         return False
 
@@ -162,6 +163,15 @@ class Role(Filters.user):
 
     def __hash__(self):
         return hash((self.name, tuple(sorted(self.user_ids))))
+
+    def __deepcopy__(self, memo):
+        new_role = Role(user_ids=self.user_ids, name=self._name)
+        memo[id(self)] = new_role
+        for pr in self.parent_roles:
+            new_role.add_parent_role(deepcopy(pr, memo))
+        for cr in self.child_roles:
+            new_role.add_child_role(deepcopy(cr, memo))
+        return new_role
 
 
 class _chat_admins(Role):
@@ -315,3 +325,15 @@ class Roles(dict):
         role = self._pop(name, None)
         if role:
             self.ADMINS.remove_child_role(role)
+
+    def __deepcopy__(self, memo):
+        new_roles = Roles(self._bot)
+        memo[id(self)] = new_roles
+        new_roles.ADMINS = deepcopy(self.ADMINS)
+        for role in self.values():
+            new_roles.add_role(name=role._name, user_ids=role.user_ids)
+            for pr in role.parent_roles:
+                new_roles[role._name].add_parent_role(deepcopy(pr, memo))
+            for cr in role.child_roles:
+                new_roles[role._name].add_child_role(deepcopy(cr, memo))
+        return new_roles

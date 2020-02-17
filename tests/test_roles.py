@@ -20,6 +20,7 @@ import datetime
 
 import pytest
 
+from copy import deepcopy
 from telegram import Message, User, InlineQuery, Update, Bot, ChatMember, Chat, TelegramError
 from telegram.ext import Role, Roles, MessageHandler, InlineQueryHandler, Filters
 
@@ -131,7 +132,7 @@ class TestRole(object):
         parent_role.add_child_role(r)
         assert role == parent_role
         role.add_parent_role(r)
-        assert role != parent_role
+        assert role == parent_role
         parent_role.add_parent_role(r)
         assert role == parent_role
 
@@ -177,6 +178,23 @@ class TestRole(object):
         assert hash(a) == hash(c)
         assert hash(a) != hash(d)
         assert hash(a) != hash(e)
+
+    def test_deepcopy(self, role, parent_role):
+        role.add_parent_role(parent_role)
+        crole = deepcopy(role)
+
+        assert role is not crole
+        assert role == crole
+        assert role.user_ids is not crole.user_ids
+        assert role.user_ids == crole.user_ids
+        assert role.parent_roles is not crole.parent_roles
+        assert role.parent_roles == crole.parent_roles
+        parent = role.parent_roles.pop()
+        cparent = crole.parent_roles.pop()
+        assert parent is not cparent
+        assert parent == cparent
+        assert role.child_roles is not crole.child_roles
+        assert role.child_roles == crole.child_roles
 
     def test_handler_simple(self, update, role, parent_role):
         handler = MessageHandler(role, None)
@@ -282,6 +300,18 @@ class TestRoles(object):
         d = [r.user_ids for r in roles.values()]
         assert d == [set([k]) for k in range(3)]
 
+    def test_deepcopy(self, roles, parent_role):
+        roles.add_admin(123)
+        roles.add_role(name='test', user_ids=[1, 2], parent_role=parent_role)
+        croles = deepcopy(roles)
+
+        assert croles is not roles
+        assert croles == roles
+        assert roles.ADMINS is not croles.ADMINS
+        assert roles.ADMINS == croles.ADMINS
+        assert roles['test'] is not croles['test']
+        assert roles['test'] == croles['test']
+
     def test_add_remove_role(self, roles, parent_role):
         roles.add_role('role', parent_role=parent_role)
         role = roles['role']
@@ -292,6 +322,9 @@ class TestRoles(object):
 
         with pytest.raises(ValueError, match='Role name is already taken.'):
             roles.add_role('role', parent_role=parent_role)
+
+        role.restored_from_persistence = True
+        assert not roles.add_role('role', parent_role=parent_role)
 
         roles.remove_role('role')
         assert not roles.get('role', None)
