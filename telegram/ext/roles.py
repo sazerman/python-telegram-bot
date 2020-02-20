@@ -34,13 +34,11 @@ class Role(Filters.user):
 
     Note:
         ``role_1 == role_2`` does not test for the hierarchical order of the roles, but in fact for
-        equality. Two roles are considerd equal, if their :attr:`user_ids` and :attr:`child_roles`
+        equality. Two roles are considerd equal, if their :attr:`user_ids` and :attr:`parent_roles`
         coincide.
 
     Attributes:
         user_ids (set(:obj:`int`)): The ids of the users of this role. May be empty.
-        child_roles (set(:class:`telegram.ext.Role`)): Child roles of this role. This role can do
-            anything, the child roles can do. May be empty.
         parent_roles (set(:class:`telegram.ext.Role`)): Parent roles of this role. All the parent
             roles can do anything, this role can do. May be empty.
         name (:obj:`str`): A string representation of this role.
@@ -57,7 +55,6 @@ class Role(Filters.user):
         if user_ids is None:
             user_ids = set()
         super(Role, self).__init__(user_ids)
-        self.child_roles = set()
         self.parent_roles = set()
         self._name = name
         if parent_role:
@@ -95,24 +92,6 @@ class Role(Filters.user):
         """
         self.user_ids.discard(user_id)
 
-    def add_child_role(self, child_role):
-        """Adds a child role to this role. Will do nothing, if child role is already present.
-
-        Args:
-            child_role (:class:`telegram.ext.Role`): The child role
-        """
-        self.child_roles.add(child_role)
-        child_role.parent_roles.add(self)
-
-    def remove_child_role(self, child_role):
-        """Removes a child role from this role. Will do nothing, if child role is not present.
-
-        Args:
-            child_role (:class:`telegram.ext.Role`): The child role
-        """
-        self.child_roles.discard(child_role)
-        child_role.parent_roles.discard(self)
-
     def add_parent_role(self, parent_role):
         """Adds a parent role to this role. Will do nothing, if parent role is already present.
 
@@ -120,7 +99,6 @@ class Role(Filters.user):
             parent_role (:class:`telegram.ext.Role`): The parent role
         """
         self.parent_roles.add(parent_role)
-        parent_role.child_roles.add(self)
 
     def remove_parent_role(self, parent_role):
         """Removes a parent role from this role. Will do nothing, if parent role is not present.
@@ -129,7 +107,6 @@ class Role(Filters.user):
             parent_role (:class:`telegram.ext.Role`): The parent role
         """
         self.parent_roles.discard(parent_role)
-        parent_role.child_roles.discard(self)
 
     def __lt__(self, other):
         # Test for hierarchical order
@@ -152,9 +129,9 @@ class Role(Filters.user):
         return self > other
 
     def __eq__(self, other):
-        # Acutally tests for equality in terms of child/parent roles and user_ids
+        # Acutally tests for equality in terms of parent roles and user_ids
         if isinstance(other, Role):
-            return (self.child_roles == other.child_roles
+            return (self.parent_roles == other.parent_roles
                     and self.user_ids == other.user_ids)
         return False
 
@@ -169,8 +146,6 @@ class Role(Filters.user):
         memo[id(self)] = new_role
         for pr in self.parent_roles:
             new_role.add_parent_role(deepcopy(pr, memo))
-        for cr in self.child_roles:
-            new_role.add_child_role(deepcopy(cr, memo))
         return new_role
 
 
@@ -219,12 +194,6 @@ class Roles(dict):
         Please use :attr:`add_role` and :attr:`remove_role` instead.
 
     Attributes:
-        user_ids (set(:obj:`int`)): The ids of the users of this role. May be empty.
-        child_roles (set(:class:`telegram.ext.Role`)): Child roles of this role. This role can do
-            anything, the child roles can do. May be empty.
-        parent_roles (set(:class:`telegram.ext.Role`)): Parent roles of this role. All the parent
-            roles can do anything, this role can do. May be empty.
-        name (:obj:`str`): A string representation of this role.
         ADMINS (:class:`telegram.ext.Role`): A role reserved for administrators of the bot. All
             roles added to this instance will be child roles of :attr:`ADMINS`.
         CHAT_ADMINS (:class:`telegram.ext.Role`): Use this role to restrict access to admins of a
@@ -233,6 +202,9 @@ class Roles(dict):
         CHAT_CREATOR (:class:`telegram.ext.Role`): Use this role to restrict access to the creator
             of a chat. Handlers with this role wont handle updates that don't have an
             ``effective_chat``.
+
+    Args:
+        bot (:class:`telegram.Bot`): A bot associated with this instance.
 
     """
 
@@ -298,8 +270,8 @@ class Roles(dict):
         self.ADMINS.kick_member(user_id)
 
     def add_role(self, name, user_ids=None, parent_role=None):
-        """Creates and registers a new role. The new role will automatically be added to
-        :attr:`ADMINS` child roles, i.e. admins can do everyhing. The role can be accessed by it's
+        """Creates and registers a new role. :attr:`ADMINS` will automatically be added to
+        roles parent roles, i.e. admins can do everyhing. The role can be accessed by it's
         name.
 
         Args:
@@ -314,17 +286,16 @@ class Roles(dict):
             raise ValueError('Role name is already taken.')
         role = Role(user_ids=user_ids, parent_role=parent_role, name=name)
         self._setitem(name, role)
-        self.ADMINS.add_child_role(role)
+        role.add_parent_role(self.ADMINS)
 
     def remove_role(self, name):
-        """Removes a role and also deletes it from :attr:`ADMINS` child roles.
+        """Removes a role.
 
         Args:
             name (:obj:`str`): The name of the role to be removed
         """
         role = self._pop(name, None)
-        if role:
-            self.ADMINS.remove_child_role(role)
+        role.remove_parent_role(self.ADMINS)
 
     def __deepcopy__(self, memo):
         new_roles = Roles(self._bot)
@@ -334,6 +305,4 @@ class Roles(dict):
             new_roles.add_role(name=role._name, user_ids=role.user_ids)
             for pr in role.parent_roles:
                 new_roles[role._name].add_parent_role(deepcopy(pr, memo))
-            for cr in role.child_roles:
-                new_roles[role._name].add_child_role(deepcopy(cr, memo))
         return new_roles
