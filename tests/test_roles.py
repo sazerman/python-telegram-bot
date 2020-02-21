@@ -91,15 +91,19 @@ class TestRole(object):
 
     def test_add_remove_parent_role(self, role, parent_role):
         assert role.parent_roles == set()
+        parent_role_2 = Role(user_ids=456, name='pr2')
         role.add_parent_role(parent_role)
         assert role.parent_roles == set([parent_role])
-        role.add_parent_role(role)
-        assert role.parent_roles == set([parent_role, role])
+        role.add_parent_role(parent_role_2)
+        assert role.parent_roles == set([parent_role, parent_role_2])
 
         role.remove_parent_role(parent_role)
-        assert role.parent_roles == set([role])
-        role.remove_parent_role(role)
+        assert role.parent_roles == set([parent_role_2])
+        role.remove_parent_role(parent_role_2)
         assert role.parent_roles == set()
+
+        with pytest.raises(ValueError, match='You must not add a role is its own parent!'):
+            role.add_parent_role(role)
 
     def test_equality(self, role, parent_role):
         r = Role(name='test')
@@ -226,6 +230,35 @@ class TestRoles(object):
         assert roles.ADMINS.user_ids == set([2])
         roles.kick_admin(2)
         assert roles.ADMINS.user_ids == set()
+
+    def test_equality(self, parent_role, roles, bot):
+        roles2 = Roles(bot)
+        assert roles == roles2
+        assert hash(roles) == hash(roles2)
+
+        roles.add_admin(1)
+        assert roles != roles2
+        assert hash(roles) != hash(roles2)
+
+        roles2.add_admin(1)
+        assert roles == roles2
+        assert hash(roles) == hash(roles2)
+
+        roles.add_role('test_role', user_ids=123)
+        assert roles != roles2
+        assert hash(roles) != hash(roles2)
+
+        roles2.add_role('test_role', user_ids=123)
+        assert roles == roles2
+        assert hash(roles) == hash(roles2)
+
+        roles['test_role'].add_parent_role(parent_role)
+        assert roles != roles2
+        assert hash(roles) != hash(roles2)
+
+        roles2['test_role'].add_parent_role(parent_role)
+        assert roles == roles2
+        assert hash(roles) == hash(roles2)
 
     def test_raise_errors(self, roles):
         with pytest.raises(NotImplementedError, match='remove_role'):

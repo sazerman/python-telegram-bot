@@ -98,6 +98,8 @@ class Role(Filters.user):
         Args:
             parent_role (:class:`telegram.ext.Role`): The parent role
         """
+        if self is parent_role:
+            raise ValueError('You must not add a role is its own parent!')
         self.parent_roles.add(parent_role)
 
     def remove_parent_role(self, parent_role):
@@ -139,7 +141,7 @@ class Role(Filters.user):
         return not self == other
 
     def __hash__(self):
-        return hash((self.name, tuple(sorted(self.user_ids))))
+        return hash((tuple(sorted(self.user_ids)), frozenset(self.parent_roles)))
 
     def __deepcopy__(self, memo):
         new_role = Role(user_ids=self.user_ids, name=self._name)
@@ -296,6 +298,17 @@ class Roles(dict):
         """
         role = self._pop(name, None)
         role.remove_parent_role(self.ADMINS)
+
+    def __eq__(self, other):
+        if isinstance(other, Roles):
+            return super(Roles, self).__eq__(other) and self.ADMINS == other.ADMINS
+        return False
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash((frozenset(self.items()), self.ADMINS))
 
     def __deepcopy__(self, memo):
         new_roles = Roles(self._bot)
