@@ -356,9 +356,6 @@ class TestRoles(object):
         with pytest.raises(ValueError, match='Role name is already taken.'):
             roles.add_role('role', parent_role=parent_role)
 
-        role.restored_from_persistence = True
-        assert not roles.add_role('role', parent_role=parent_role)
-
         roles.remove_role('role')
         assert not roles.get('role', None)
         assert roles.ADMINS not in role.parent_roles

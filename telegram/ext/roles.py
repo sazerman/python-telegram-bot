@@ -392,7 +392,6 @@ class Roles(dict):
             id_ = id(role)
             if id_ not in memo:
                 inner_tmp = {'name': role._name, 'chat_ids': sorted(role.chat_ids)}
-                inner_tmp['restored_from_persistence'] = role.restored_from_persistence
                 inner_tmp['parent_roles'] = [
                     _encode_role_to_json(pr, memo) for pr in role.parent_roles
                 ]
@@ -422,7 +421,6 @@ class Roles(dict):
 
             tmp = memo[id_]
             role = Role(name=tmp['name'], chat_ids=tmp['chat_ids'])
-            role.restored_from_persistence = tmp['restored_from_persistence']
             for pid in tmp['parent_roles']:
                 role.add_parent_role(_decode_role_from_json(pid, memo))
             return role
