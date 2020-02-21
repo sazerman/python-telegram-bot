@@ -786,7 +786,7 @@ class TestConversationHandler(object):
         dp.add_handler(handler)
 
         # User one, starts the state machine.
-        message = Message(0, user1, None, self.group, text='/start',
+        message = Message(0, user1, None, self.second_group, text='/start',
                           entities=[MessageEntity(type=MessageEntity.BOT_COMMAND,
                                                   offset=0, length=len('/start'))],
                           bot=bot)
