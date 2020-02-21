@@ -25,7 +25,7 @@ except ImportError:
 
 from copy import deepcopy
 
-from telegram import ChatMember, TelegramError
+from telegram import ChatMember, TelegramError, Bot
 from .filters import Filters
 
 
@@ -245,6 +245,21 @@ class Roles(dict):
         self.ADMINS = Role(name='admins')
         self.CHAT_ADMINS = _chat_admins(bot=self._bot)
         self.CHAT_CREATOR = _chat_creator(bot=self._bot)
+
+    def set_bot(self, bot):
+        """If for some reason you can't pass the bot on initialization, you can set it with this
+        method. Make sure to set the bot before the first call of :attr:`CHAT_ADMINS` or
+        :attr:`CHAT_CREATOR`.
+
+        Args:
+            bot (:class:`telegram.Bot`): The bot to set.
+
+        Raises:
+            ValueError
+        """
+        if isinstance(self._bot, Bot):
+            raise ValueError('Bot is already set for this Roles instance')
+        self._bot = bot
 
     def __delitem__(self, key):
         """"""  # Remove method from docs

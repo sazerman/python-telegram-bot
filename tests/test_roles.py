@@ -21,7 +21,7 @@ import datetime
 import pytest
 
 from copy import deepcopy
-from telegram import Message, User, InlineQuery, Update, Bot, ChatMember, Chat, TelegramError
+from telegram import Message, User, InlineQuery, Update, ChatMember, Chat, TelegramError
 from telegram.ext import Role, Roles, MessageHandler, InlineQueryHandler, Filters
 
 
@@ -236,10 +236,20 @@ class TestRoles(object):
         assert isinstance(roles, dict)
         assert isinstance(roles.ADMINS, Role)
         assert isinstance(roles.CHAT_ADMINS, Role)
-        assert isinstance(roles.CHAT_ADMINS._bot, Bot)
+        assert roles.CHAT_ADMINS._bot is bot
         assert isinstance(roles.CHAT_CREATOR, Role)
-        assert isinstance(roles.CHAT_CREATOR._bot, Bot)
-        assert isinstance(roles._bot, Bot)
+        assert roles.CHAT_CREATOR._bot is bot
+        assert roles._bot is bot
+
+    def test_set_bot(self, bot):
+        roles = Roles(1)
+        assert roles._bot == 1
+        roles.set_bot(2)
+        assert roles._bot == 2
+        roles.set_bot(bot)
+        assert roles._bot is bot
+        with pytest.raises(ValueError, match='already set'):
+            roles.set_bot(bot)
 
     def test_add_kick_admin(self, roles):
         assert roles.ADMINS.chat_ids == set()
@@ -256,39 +266,30 @@ class TestRoles(object):
         roles2 = Roles(bot)
         parent_role_2 = deepcopy(parent_role)
         assert roles == roles2
-        # assert hash(roles) == hash(roles2)
 
         roles.add_admin(1)
         assert roles != roles2
-        # assert hash(roles) != hash(roles2)
 
         roles2.add_admin(1)
         assert roles == roles2
-        # assert hash(roles) == hash(roles2)
 
         roles.add_role('test_role', chat_ids=123)
         assert roles != roles2
-        # assert hash(roles) != hash(roles2)
 
         roles2.add_role('test_role', chat_ids=123)
         assert roles == roles2
-        # assert hash(roles) == hash(roles2)
 
         roles.add_role('test_role_2', chat_ids=456)
         assert roles != roles2
-        # assert hash(roles) != hash(roles2)
 
         roles2.add_role('test_role_2', chat_ids=456)
         assert roles == roles2
-        # assert hash(roles) == hash(roles2)
 
         roles['test_role'].add_parent_role(parent_role)
         assert roles != roles2
-        # assert hash(roles) != hash(roles2)
 
         roles2['test_role'].add_parent_role(parent_role_2)
         assert roles == roles2
-        # assert hash(roles) == hash(roles2)
 
     def test_raise_errors(self, roles):
         with pytest.raises(NotImplementedError, match='remove_role'):
@@ -442,7 +443,7 @@ class TestRoles(object):
 
         rroles = Roles.decode_from_json(json_str, bot)
         assert rroles == roles
-        assert isinstance(rroles._bot, Bot)
+        assert rroles._bot is bot
         for name in rroles:
             assert rroles[name] <= rroles.ADMINS
         assert rroles.ADMINS.chat_ids == set([9, 10])
