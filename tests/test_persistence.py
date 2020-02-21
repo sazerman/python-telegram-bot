@@ -70,7 +70,7 @@ def roles():
     roles = Roles(None)
     roles.add_admin(12345)
     roles.add_role(name='parent_role', chat_ids=[456])
-    roles.add_role(name='role', chat_ids=[123], parent_role=roles['parent_role'])
+    roles.add_role(name='role', chat_ids=[123], parent_roles=roles['parent_role'])
     return roles
 
 
@@ -286,7 +286,7 @@ class TestBasePersistence(object):
         assert dp.chat_data[-987654][2] == 'test8'
         assert dp.bot_data['test0'] == 'test0'
         assert dp.roles['test0'].equals(Role(name='test0', chat_ids=[1, 2, 3],
-                                             parent_role=dp.roles.ADMINS))
+                                             parent_roles=dp.roles.ADMINS))
 
     def test_persistence_dispatcher_arbitrary_update_types(self, dp, base_persistence, caplog):
         # Updates used with TypeHandler doesn't necessarily have the proper attributes for
@@ -475,10 +475,9 @@ class TestPickelPersistence(object):
         assert isinstance(roles, Roles)
         assert roles.ADMINS.equals(Role(name='admins', chat_ids=12345))
         assert roles['parent_role'].equals(Role(name='parent_role', chat_ids=456,
-                                                parent_role=roles.ADMINS))
-        r = Role(name='role', chat_ids=123, parent_role=roles['parent_role'])
-        r.add_parent_role(roles.ADMINS)
-        assert roles['role'].equals(r)
+                                                parent_roles=roles.ADMINS))
+        assert roles['role'].equals(Role(name='role', chat_ids=123,
+                                         parent_roles=[roles['parent_role'], roles.ADMINS]))
         assert not roles.get('test', None)
 
         conversation1 = pickle_persistence.get_conversations('name1')
@@ -518,10 +517,9 @@ class TestPickelPersistence(object):
         assert isinstance(roles, Roles)
         assert roles.ADMINS.equals(Role(name='admins', chat_ids=12345))
         assert roles['parent_role'].equals(Role(name='parent_role', chat_ids=456,
-                                                parent_role=roles.ADMINS))
-        r = Role(name='role', chat_ids=123, parent_role=roles['parent_role'])
-        r.add_parent_role(roles.ADMINS)
-        assert roles['role'].equals(r)
+                                                parent_roles=roles.ADMINS))
+        assert roles['role'].equals(Role(name='role', chat_ids=123,
+                                         parent_roles=[roles['parent_role'], roles.ADMINS]))
         assert not roles.get('test', None)
 
         conversation1 = pickle_persistence.get_conversations('name1')
@@ -1161,10 +1159,9 @@ class TestDictPersistence(object):
         assert isinstance(roles, Roles)
         assert roles.ADMINS.equals(Role(name='admins', chat_ids=12345))
         assert roles['parent_role'].equals(Role(name='parent_role', chat_ids=456,
-                                                parent_role=roles.ADMINS))
-        r = Role(name='role', chat_ids=123, parent_role=roles['parent_role'])
-        r.add_parent_role(roles.ADMINS)
-        assert roles['role'].equals(r)
+                                                parent_roles=roles.ADMINS))
+        assert roles['role'].equals(Role(name='role', chat_ids=123,
+                                         parent_roles=[roles['parent_role'], roles.ADMINS]))
         assert not roles.get('test', None)
 
         conversation1 = dict_persistence.get_conversations('name1')

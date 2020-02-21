@@ -81,6 +81,7 @@ class Dispatcher(object):
         user_data (:obj:`defaultdict`): A dictionary handlers can use to store data for the user.
         chat_data (:obj:`defaultdict`): A dictionary handlers can use to store data for the chat.
         bot_data (:obj:`dict`): A dictionary handlers can use to store data for the bot.
+        roles (:class:`telegram.ext.Roles`): An object you can use to restrict access to handlers.
         persistence (:class:`telegram.ext.BasePersistence`): Optional. The persistence class to
             store data that should be persistent over restarts
 
@@ -490,7 +491,7 @@ class Dispatcher(object):
                 self.groups.remove(group)
 
     def update_persistence(self):
-        """Update :attr:`user_data`, :attr:`chat_data`, :attr:`bot_data` and :attr:`roles`in
+        """Update :attr:`user_data`, :attr:`chat_data`, :attr:`bot_data` and :attr:`roles` in
         :attr:`persistence`.
         """
         if self.persistence:
