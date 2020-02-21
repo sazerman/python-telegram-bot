@@ -92,7 +92,9 @@ class PicklePersistence(BasePersistence):
                 all = pickle.load(f)
                 self.user_data = defaultdict(dict, all['user_data'])
                 self.chat_data = defaultdict(dict, all['chat_data'])
-                self.bot_data = all['bot_data']
+                # For backwards compatibility with files not containing bot data
+                self.bot_data = all.get('bot_data', {})
+                # For backwards compatibility with files not containing roles
                 self.roles = all.get('roles', Roles(None))
                 if self.roles:
                     self.roles = Roles.decode_from_json(self.roles, None)
