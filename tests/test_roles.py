@@ -338,8 +338,8 @@ class TestRoles(object):
         c = sorted([name for name in roles.keys()])
         assert c == sorted(['role{}'.format(k) for k in range(3)])
 
-        d = [r.chat_ids for r in roles.values()]
-        assert d == [set([k]) for k in range(3)]
+        d = sorted([r.chat_ids for r in roles.values()])
+        assert d == sorted([set([k]) for k in range(3)])
 
     def test_deepcopy(self, roles, parent_role):
         roles.add_admin(123)
