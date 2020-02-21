@@ -64,11 +64,18 @@ class Role(Filters.user):
         if chat_ids is None:
             chat_ids = set()
         super(Role, self).__init__(chat_ids)
-        self.chat_ids = self.user_ids
         self.parent_roles = set()
         self._name = name
         if parent_role:
             self.add_parent_role(parent_role)
+
+    @property
+    def chat_ids(self):
+        return self.user_ids
+
+    @chat_ids.setter
+    def chat_ids(self, chat_id):
+        self.user_ids = chat_id
 
     @property
     def name(self):

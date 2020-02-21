@@ -68,6 +68,11 @@ class TestRole(object):
         assert r.name == 'Role(role)'
         assert r.parent_roles == set()
 
+    def test_chat_ids_property(self, role):
+        assert role.chat_ids is role.user_ids
+        role.chat_ids = 5
+        assert role.chat_ids == set([5])
+
     def test_add_member(self, role):
         assert role.chat_ids == set()
         role.add_member(1)

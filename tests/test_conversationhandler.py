@@ -793,7 +793,7 @@ class TestConversationHandler(object):
         dp.process_update(Update(update_id=0, message=message))
         assert user1.id not in self.current_state
 
-        role.user_ids = 123
+        role.chat_ids = 123
         dp.process_update(Update(update_id=0, message=message))
         assert self.current_state[user1.id] == self.THIRSTY
 
