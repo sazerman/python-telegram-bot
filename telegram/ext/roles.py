@@ -26,16 +26,16 @@ from .filters import Filters
 
 class Role(Filters.user):
     """This class represents a security level used by :class:`telegram.ext.Roles`. Roles have a
-    hierarchie, i.e. a role can do everthing, its child roles can do. To compare two roles you may
+    hierarchy, i.e. a role can do everthing, its child roles can do. To compare two roles you may
     use the following syntax::
 
         role_1 < role_2
         role 2 >= role_3
 
-    Note:
-        ``role_1 == role_2`` does not test for the hierarchical order of the roles, but in fact for
-        equality. Two roles are considerd equal, if their :attr:`user_ids` and :attr:`parent_roles`
-        coincide.
+    Warning:
+        ``role_1 == role_2`` does not test for the hierarchical order of the roles, but in fact if
+        both roles are the same object. To test for equality in terms of hierarchical order, i.e.
+        if both :attr:`parent_roles` and :attr:`user_ids` coincide, use :attr:`equals`.
 
     Attributes:
         user_ids (set(:obj:`int`)): The ids of the users of this role. May be empty.
@@ -131,17 +131,31 @@ class Role(Filters.user):
         return self > other
 
     def __eq__(self, other):
-        # Acutally tests for equality in terms of parent roles and user_ids
-        if isinstance(other, Role):
-            return (self.parent_roles == other.parent_roles
-                    and self.user_ids == other.user_ids)
-        return False
+        return self is other
 
     def __ne__(self, other):
         return not self == other
 
+    def equals(self, other):
+        """Test if two roles are equal in terms of hierarchy. Returns ``True``, if the user_ids
+        coincide and the parent roles are equal in terms of this method.
+
+        Args:
+            other (:class:`telegram.ext.Role`):
+
+        Returns:
+            :obj:`bool`:
+        """
+        for pr in self.parent_roles:
+            if not any([pr.equals(opr) for opr in other.parent_roles]):
+                return False
+        for opr in other.parent_roles:
+            if not any([opr.equals(pr) for pr in self.parent_roles]):
+                return False
+        return self.user_ids == other.user_ids
+
     def __hash__(self):
-        return hash((tuple(sorted(self.user_ids)), frozenset(self.parent_roles)))
+        return id(self)
 
     def __deepcopy__(self, memo):
         new_role = Role(user_ids=self.user_ids, name=self._name)
@@ -301,14 +315,19 @@ class Roles(dict):
 
     def __eq__(self, other):
         if isinstance(other, Roles):
-            return super(Roles, self).__eq__(other) and self.ADMINS == other.ADMINS
+            for name, role in self.items():
+                orole = other.get(name, None)
+                if not orole:
+                    return False
+                if not role.equals(orole):
+                    return False
+            if any([self.get(name, None) is None for name in other]):
+                return False
+            return self.ADMINS.equals(other.ADMINS)
         return False
 
     def __ne__(self, other):
         return not self == other
-
-    def __hash__(self):
-        return hash((frozenset(self.items()), self.ADMINS))
 
     def __deepcopy__(self, memo):
         new_roles = Roles(self._bot)
