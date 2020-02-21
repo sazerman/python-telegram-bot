@@ -19,6 +19,7 @@
 import datetime
 
 import pytest
+import sys
 
 from copy import deepcopy
 from telegram import Message, User, InlineQuery, Update, ChatMember, Chat, TelegramError
@@ -321,6 +322,7 @@ class TestRoles(object):
         with pytest.raises(NotImplementedError):
             roles.copy()
 
+    @pytest.mark.skipif(sys.version_info < (3, 6), reason="dicts are not ordered in py<=3.5")
     def test_dict_functionality(self, roles):
         roles.add_role('role0', 0)
         roles.add_role('role1', 1)
@@ -335,11 +337,11 @@ class TestRoles(object):
         b = {name: role.chat_ids for name, role in roles.items()}
         assert b == {'role{}'.format(k): set([k]) for k in range(3)}
 
-        c = sorted([name for name in roles.keys()])
-        assert c == sorted(['role{}'.format(k) for k in range(3)])
+        c = [name for name in roles.keys()]
+        assert c == ['role{}'.format(k) for k in range(3)]
 
-        d = sorted([r.chat_ids for r in roles.values()])
-        assert d == sorted([set([k]) for k in range(3)])
+        d = [r.chat_ids for r in roles.values()]
+        assert d == [set([k]) for k in range(3)]
 
     def test_deepcopy(self, roles, parent_role):
         roles.add_admin(123)
