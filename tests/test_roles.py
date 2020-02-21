@@ -128,6 +128,7 @@ class TestRole(object):
         assert role.equals(parent_role)
 
     def test_comparison(self, role, parent_role):
+        parent_role_2 = Role(name='parent_role')
         assert not role < parent_role
         assert not parent_role < role
         role.add_parent_role(parent_role)
@@ -135,6 +136,10 @@ class TestRole(object):
         assert role <= parent_role
         assert parent_role >= role
         assert parent_role > role
+        assert role < parent_role_2
+        assert role <= parent_role_2
+        assert parent_role_2 >= role
+        assert parent_role_2 > role
         role.remove_parent_role(parent_role)
         assert not role < parent_role
         assert not parent_role < role
