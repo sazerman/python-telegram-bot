@@ -335,8 +335,8 @@ class TestRoles(object):
         b = {name: role.chat_ids for name, role in roles.items()}
         assert b == {'role{}'.format(k): set([k]) for k in range(3)}
 
-        c = [name for name in roles.keys()]
-        assert c == ['role{}'.format(k) for k in range(3)]
+        c = sorted([name for name in roles.keys()])
+        assert c == sorted(['role{}'.format(k) for k in range(3)])
 
         d = [r.chat_ids for r in roles.values()]
         assert d == [set([k]) for k in range(3)]
