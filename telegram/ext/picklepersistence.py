@@ -89,16 +89,16 @@ class PicklePersistence(BasePersistence):
         try:
             filename = self.filename
             with open(self.filename, "rb") as f:
-                all = pickle.load(f)
-                self.user_data = defaultdict(dict, all['user_data'])
-                self.chat_data = defaultdict(dict, all['chat_data'])
+                data = pickle.load(f)
+                self.user_data = defaultdict(dict, data['user_data'])
+                self.chat_data = defaultdict(dict, data['chat_data'])
                 # For backwards compatibility with files not containing bot data
-                self.bot_data = all.get('bot_data', {})
+                self.bot_data = data.get('bot_data', {})
                 # For backwards compatibility with files not containing roles
-                self.roles = all.get('roles', Roles(None))
+                self.roles = data.get('roles', Roles(None))
                 if self.roles:
                     self.roles = Roles.decode_from_json(self.roles, None)
-                self.conversations = all['conversations']
+                self.conversations = data['conversations']
         except IOError:
             self.conversations = {}
             self.user_data = defaultdict(dict)
@@ -123,11 +123,11 @@ class PicklePersistence(BasePersistence):
 
     def dump_singlefile(self):
         with open(self.filename, "wb") as f:
-            all = {'conversations': self.conversations, 'user_data': self.user_data,
-                   'chat_data': self.chat_data, 'bot_data': self.bot_data,
-                   # Roles have locks, so we just use the json encoding
-                   'roles': self.roles.encode_to_json()}
-            pickle.dump(all, f)
+            data = {'conversations': self.conversations, 'user_data': self.user_data,
+                    'chat_data': self.chat_data, 'bot_data': self.bot_data,
+                    # Roles have locks, so we just use the json encoding
+                    'roles': self.roles.encode_to_json()}
+            pickle.dump(data, f)
 
     def dump_file(self, filename, data):
         with open(filename, "wb") as f:
