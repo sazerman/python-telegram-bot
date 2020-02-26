@@ -526,22 +526,22 @@ class Roles(dict):
         Returns:
             :obj:`str`: The JSON-serialized roles object
         """
-        def _encode_role_to_json(role, memo, trace=[]):
+        def _encode_role_to_json(role, memo, trace):
             id_ = id(role)
             if id_ not in memo and id_ not in trace:
                 trace.append(id_)
                 inner_tmp = {'name': role._name, 'chat_ids': sorted(role.chat_ids)}
                 inner_tmp['parent_roles'] = [
-                    _encode_role_to_json(pr, memo) for pr in role.parent_roles
+                    _encode_role_to_json(pr, memo, trace) for pr in role.parent_roles
                 ]
                 inner_tmp['child_roles'] = [
-                    _encode_role_to_json(cr, memo) for cr in role.child_roles
+                    _encode_role_to_json(cr, memo, trace) for cr in role.child_roles
                 ]
                 memo[id_] = inner_tmp
             return id_
 
         tmp = {'admins': id(self.ADMINS), 'roles': [], 'memo': {}}
-        tmp['roles'] = [_encode_role_to_json(self[name], tmp['memo']) for name in self]
+        tmp['roles'] = [_encode_role_to_json(self[name], tmp['memo'], []) for name in self]
         return json.dumps(tmp)
 
     @staticmethod
@@ -556,7 +556,7 @@ class Roles(dict):
         Returns:
             :class:`telegram.ext.Roles`: The roles object after decoding
         """
-        def _decode_role_from_json(id_, memo, parsed=[]):
+        def _decode_role_from_json(id_, memo):
             id_ = str(id_)
             if isinstance(memo[id_], Role):
                 return memo[id_]
