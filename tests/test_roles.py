@@ -148,13 +148,20 @@ class TestRole(object):
             role.add_child_role(parent_role)
 
     def test_equals(self, role, parent_role):
-        r = Role(name='test')
-        r2 = Role(name='test')
+        r = Role(name='test1')
+        r2 = Role(name='test2')
+        r3 = Role(name='test3', chat_ids=[1, 2])
+        r4 = Role(name='test4')
         assert role.equals(parent_role)
         role.add_child_role(r)
         assert not role.equals(parent_role)
         parent_role.add_child_role(r2)
         assert role.equals(parent_role)
+        parent_role.add_child_role(r3)
+        role.add_child_role(r4)
+        assert not role.equals(parent_role)
+        role.remove_child_role(r4)
+        parent_role.remove_child_role(r3)
 
         role.add_member(1)
         assert not role.equals(parent_role)
@@ -175,6 +182,9 @@ class TestRole(object):
         assert role.equals(parent_role)
 
     def test_comparison(self, role, parent_role):
+        assert not role <= 1
+        assert not role >= 1
+
         assert not role < parent_role
         assert not parent_role < role
         assert role <= role
@@ -286,6 +296,9 @@ class TestRole(object):
         handler = MessageHandler(None, None, roles=~parent_role)
         assert not handler.check_update(update)
         update.message.from_user.id = 1
+        update.message.chat.id = 1
+        assert not handler.check_update(update)
+        update.message.from_user.id = 2
         update.message.chat.id = 1
         assert not handler.check_update(update)
 
@@ -467,6 +480,35 @@ class TestRoles(object):
             return [ChatMember(User(0, 'TestUser0', False), 'administrator'),
                     ChatMember(User(1, 'TestUser1', False), 'creator')]
 
+        monkeypatch.setattr(roles._bot, 'get_chat_administrators', admins)
+        handler = MessageHandler(None, None, roles=roles.CHAT_ADMINS)
+
+        update.message.from_user.id = 2
+        assert not handler.check_update(update)
+        update.message.from_user.id = 1
+        assert handler.check_update(update)
+        update.message.from_user.id = 0
+        assert handler.check_update(update)
+
+    def test_chat_admins_no_chat(self, roles, update):
+        update.message = None
+        update.inline_query = InlineQuery(1, User(0, 'TestUser', False), 'query', 0)
+        handler = InlineQueryHandler(None, roles=roles.CHAT_ADMINS)
+
+        assert not handler.check_update(update)
+
+    def test_chat_admins_no_user(self, roles, update):
+        update.message = None
+        update.channel_post = Message(1, None, datetime.datetime.utcnow(), Chat(0, 'channel'))
+        handler = InlineQueryHandler(None, roles=roles.CHAT_ADMINS)
+
+        assert not handler.check_update(update)
+
+    def test_chat_admins_caching(self, roles, update, monkeypatch):
+        def admins(*args, **kwargs):
+            return [ChatMember(User(0, 'TestUser0', False), 'administrator'),
+                    ChatMember(User(1, 'TestUser1', False), 'creator')]
+
         roles.CHAT_ADMINS._timeout = 0.05
         monkeypatch.setattr(roles._bot, 'get_chat_administrators', admins)
         handler = MessageHandler(None, None, roles=roles.CHAT_ADMINS)
@@ -498,35 +540,6 @@ class TestRoles(object):
         assert pytest.approx(roles.CHAT_ADMINS._cache[0][0]) == time.time()
         assert roles.CHAT_ADMINS._cache[0][1] == [2]
 
-    def test_chat_admins_no_chat(self, roles, update):
-        update.message = None
-        update.inline_query = InlineQuery(1, User(0, 'TestUser', False), 'query', 0)
-        handler = InlineQueryHandler(None, roles=roles.CHAT_ADMINS)
-
-        assert not handler.check_update(update)
-
-    def test_chat_admins_no_user(self, roles, update):
-        update.message = None
-        update.channel_post = Message(1, None, datetime.datetime.utcnow(), Chat(0, 'channel'))
-        handler = InlineQueryHandler(None, roles=roles.CHAT_ADMINS)
-
-        assert not handler.check_update(update)
-
-    def test_chat_admins_caching(self, roles, update, monkeypatch):
-        def admins(*args, **kwargs):
-            return [ChatMember(User(0, 'TestUser0', False), 'administrator'),
-                    ChatMember(User(1, 'TestUser1', False), 'creator')]
-
-        monkeypatch.setattr(roles._bot, 'get_chat_administrators', admins)
-        handler = MessageHandler(None, None, roles=roles.CHAT_ADMINS)
-
-        update.message.from_user.id = 2
-        assert not handler.check_update(update)
-        update.message.from_user.id = 1
-        assert handler.check_update(update)
-        update.message.from_user.id = 0
-        assert handler.check_update(update)
-
     def test_chat_creator_simple(self, roles, update, monkeypatch):
         def member(*args, **kwargs):
             if args[1] == 0:
@@ -541,8 +554,10 @@ class TestRoles(object):
         update.message.from_user.id = 0
         assert not handler.check_update(update)
         update.message.from_user.id = 1
+        update.message.chat.id = 1
         assert handler.check_update(update)
         update.message.from_user.id = 2
+        update.message.chat.id = 2
         assert not handler.check_update(update)
 
     def test_chat_creator_no_chat(self, roles, update):
