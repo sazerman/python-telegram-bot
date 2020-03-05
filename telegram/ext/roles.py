@@ -380,7 +380,7 @@ class Roles(dict):
             roles added to this instance will be child roles of :attr:`ADMINS`.
         CHAT_ADMINS (:class:`telegram.ext.Role`): Use this role to restrict access to admins of a
             chat. Handlers with this role wont handle updates that don't have an
-            ``effective_chat``.
+            ``effective_chat``. Admins are cached for each chat with a timeout of half an hour.
         CHAT_CREATOR (:class:`telegram.ext.Role`): Use this role to restrict access to the creator
             of a chat. Handlers with this role wont handle updates that don't have an
             ``effective_chat``.
