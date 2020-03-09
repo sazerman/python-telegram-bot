@@ -42,7 +42,7 @@ from .shippingqueryhandler import ShippingQueryHandler
 from .messagequeue import MessageQueue
 from .messagequeue import DelayQueue
 from .defaults import Defaults
-from .roles import Role, Roles
+from .roles import Role, Roles, ChatAdminsRole, ChatCreatorRole
 
 __all__ = ('Dispatcher', 'JobQueue', 'Job', 'Updater', 'CallbackQueryHandler',
            'ChosenInlineResultHandler', 'CommandHandler', 'Handler', 'InlineQueryHandler',
@@ -50,4 +50,5 @@ __all__ = ('Dispatcher', 'JobQueue', 'Job', 'Updater', 'CallbackQueryHandler',
            'StringRegexHandler', 'TypeHandler', 'ConversationHandler',
            'PreCheckoutQueryHandler', 'ShippingQueryHandler', 'MessageQueue', 'DelayQueue',
            'DispatcherHandlerStop', 'run_async', 'CallbackContext', 'BasePersistence',
-           'PicklePersistence', 'DictPersistence', 'PrefixHandler', 'Defaults', 'Role', 'Roles')
+           'PicklePersistence', 'DictPersistence', 'PrefixHandler', 'Defaults', 'Role', 'Roles',
+           'ChatAdminsRole', 'ChatCreatorRole')
