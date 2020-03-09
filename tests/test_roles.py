@@ -52,33 +52,33 @@ class TestRole(object):
     def test_creation(self, parent_role):
         r = Role(parent_roles=[parent_role, parent_role])
         assert r.chat_ids == set()
-        assert r.name == 'Role({})'
+        assert str(r) == 'Role({})'
         assert r.parent_roles == set([parent_role])
 
         r = Role(child_roles=[parent_role, parent_role])
         assert r.chat_ids == set()
-        assert r.name == 'Role({})'
+        assert str(r) == 'Role({})'
         assert r.child_roles == set([parent_role])
 
         parent_role_2 = Role(name='parent_role_2')
         r = Role(parent_roles=[parent_role, parent_role_2])
         assert r.chat_ids == set()
-        assert r.name == 'Role({})'
+        assert str(r) == 'Role({})'
         assert r.parent_roles == set([parent_role, parent_role_2])
 
         r = Role(1)
         assert r.chat_ids == set([1])
-        assert r.name == 'Role({1})'
+        assert str(r) == 'Role({1})'
         assert r.parent_roles == set()
 
         r = Role([1, 2])
         assert r.chat_ids == set([1, 2])
-        assert r.name == 'Role({1, 2})'
+        assert str(r) == 'Role({1, 2})'
         assert r.parent_roles == set()
 
         r = Role([1, 2], name='role')
         assert r.chat_ids == set([1, 2])
-        assert r.name == 'Role(role)'
+        assert str(r) == 'Role(role)'
         assert r.parent_roles == set()
 
     def test_chat_ids_property(self, role):
@@ -442,7 +442,7 @@ class TestRoles(object):
         role = roles['role']
         assert role.chat_ids == set()
         assert role.parent_roles == set([parent_role, roles.ADMINS])
-        assert role.name == 'Role(role)'
+        assert str(role) == 'Role(role)'
         assert roles.ADMINS in role.parent_roles
 
         with pytest.raises(ValueError, match='Role name is already taken.'):
