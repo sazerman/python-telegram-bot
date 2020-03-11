@@ -1,11 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Simple Bot to reply to Telegram messages.
-
-This is built on the API wrapper, see echobot2.py to see the same example built
-on the telegram.ext bot framework.
-This program is dedicated to the public domain under the CC0 license.
-"""
+import telegram.ext
 import logging
 import telegram
 from telegram.error import NetworkError, Unauthorized
@@ -14,12 +7,12 @@ from time import sleep
 
 update_id = None
 
-
+##################################################3
 def main():
     """Run the bot."""
     global update_id
     # Telegram Bot Authorization Token
-    bot = telegram.Bot('TOKEN')
+    bot = telegram.Bot('945487978:AAHAsO66Z9xpjHKPIIyjUqaUKTroIAA2XTw')
 
     # get the first pending update_id, this is so we can skip over it in case
     # we get an "Unauthorized" exception.
@@ -32,7 +25,7 @@ def main():
 
     while True:
         try:
-            echo(bot)
+            delete_msg(bot)
         except NetworkError:
             sleep(1)
         except Unauthorized:
@@ -51,6 +44,11 @@ def echo(bot):
             # Reply to the message
             update.message.reply_text(update.message.text)
 
-
+def delete_msg(bot, update):
+    
+    
+    bot.delete_message(chat_id=-1001466055022, message_id= 0+1)
 if __name__ == '__main__':
     main()
+
+    
